@@ -1,10 +1,11 @@
 import random
 
 class DominionCard:
-    def __init__(self, name, cost, card_type):
+    def __init__(self, name, cost, card_type, action=None):
         self.name = name
         self.cost = cost
         self.card_type = card_type
+        self.action = action
 
     def __str__(self):
         return f"{self.name} ({self.card_type})"
@@ -47,8 +48,8 @@ class DominionGame:
             DominionCard("Estate", 2, "Victory"),
             DominionCard("Duchy", 5, "Victory"),
             DominionCard("Province", 8, "Victory"),
-            DominionCard("Smithy", 4, "Action"),
-            DominionCard("Village", 3, "Action"),
+            DominionCard("Smithy", 4, "Action", action=self.draw_action),
+            DominionCard("Village", 3, "Action", action=self.draw_action),
             # Add more cards...
         ]
         return supply
@@ -73,11 +74,12 @@ class DominionGame:
         current_player.draw_cards(1)
         current_player.display_hand()
 
-        # Example: Play an action card (Smithy)
-        smithy_card = next((card for card in current_player.hand if card.name == "Smithy"), None)
-        if smithy_card:
-            current_player.hand.remove(smithy_card)
-            current_player.draw_cards(3)
+        # Example: Play an action card
+        action_cards = [card for card in current_player.hand if card.card_type == "Action"]
+        if action_cards:
+            played_card = random.choice(action_cards)
+            current_player.hand.remove(played_card)
+            played_card.action(current_player)
             current_player.display_hand()
 
         # Example: Buy a card
@@ -88,6 +90,9 @@ class DominionGame:
 
         # End the turn
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
+
+    def draw_action(self, player):
+        player.draw_cards(3)
 
     def buy_card(self, card_name, player):
         affordable_cards = [card for card in self.supply if card.name == card_name and card.cost <= 6]
